@@ -23,7 +23,7 @@ func main() {
 	CheckInbox()
 
 	c := cron.New()
-	c.AddFunc("@every 5s", CheckInbox)
+	c.AddFunc("@every 2m", CheckInbox)
 	c.Start()
 
 	StartWebServer()
