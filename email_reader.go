@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"io"
 	"log"
 	"net"
 	"os"
@@ -10,8 +11,17 @@ import (
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
+	"github.com/emersion/go-message"
 	imapmail "github.com/emersion/go-message/mail"
+	"golang.org/x/net/html/charset"
 )
+
+func init() {
+	// Correct: setting the global CharsetReader
+	message.CharsetReader = func(charsetStr string, input io.Reader) (io.Reader, error) {
+		return charset.NewReaderLabel(charsetStr, input)
+	}
+}
 
 func CheckInbox() {
 	log.Println("📬 Connecting to Gmail IMAP...")
@@ -56,24 +66,38 @@ func CheckInbox() {
 	}
 
 	seqSet := new(imap.SeqSet)
+
+	const fetchCount = 1000
+
 	from := uint32(1)
-	if mbox.Messages > 10 {
-		from = mbox.Messages - 10
+	if mbox.Messages > fetchCount {
+		from = mbox.Messages - fetchCount + 1
 	}
 	seqSet.AddRange(from, mbox.Messages)
 
 	section := &imap.BodySectionName{}
-	messages := make(chan *imap.Message, 10)
+	messages := make(chan *imap.Message, fetchCount)
+
+	var emailCount = 0
 
 	go func() {
-		if err := c.Fetch(seqSet, []imap.FetchItem{section.FetchItem()}, messages); err != nil {
+		if err := c.Fetch(seqSet, []imap.FetchItem{
+			section.FetchItem(),
+			imap.FetchEnvelope,
+		}, messages); err != nil {
 			log.Println("❌ Fetch failed:", err)
 		}
+		close(messages) // ✅ close only here, inside the goroutine
 	}()
 
 	for msg := range messages {
+		emailCount += 1
 		if msg == nil {
 			log.Println("⚠️ Received nil message, skipping")
+			continue
+		}
+		if msg.Envelope == nil {
+			log.Println("⚠️ Skipping message with nil envelope")
 			continue
 		}
 		r := msg.GetBody(section)
@@ -90,9 +114,16 @@ func CheckInbox() {
 		header := mr.Header
 		subject, _ := header.Subject()
 		from, _ := header.AddressList("From")
-		log.Println("📩", subject, "| From:", from[0].Address)
 
-		if isJobRelated(subject) {
+		fromAddress := "unknown"
+		if len(from) > 0 && from[0] != nil {
+			fromAddress = from[0].Address
+		}
+
+		log.Println("📩", subject, "| From:", fromAddress)
+		log.Println(emailCount)
+
+		if isJobRelated(subject) && isCareerDomain(fromAddress) {
 			job := Job{
 				Company: "Unknown",
 				Title:   subject,
@@ -105,6 +136,30 @@ func CheckInbox() {
 	}
 
 	log.Println("✅ Done processing recent messages.")
+
+}
+
+func isCareerDomain(address string) bool {
+	domains := []string{
+		"linkedin.com",
+		"indeed.com",
+		"workdaymail.com",
+		"jobs.noreply@",
+		"myworkdayjobs.com",
+		"glassdoor.com",
+		"jobvite.com",
+		"lever.co",
+		"greenhouse.io",
+		"careers@", // generic
+	}
+
+	address = strings.ToLower(address)
+	for _, domain := range domains {
+		if strings.Contains(address, domain) {
+			return true
+		}
+	}
+	return false
 }
 
 func isJobRelated(subject string) bool {
