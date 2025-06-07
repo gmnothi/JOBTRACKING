@@ -207,5 +207,5 @@ func isJobRelated(subject string) bool {
 	return strings.Contains(subject, "applied") ||
 		strings.Contains(subject, "thank you") ||
 		strings.Contains(subject, "application received") ||
-		strings.Contains(subject, "we regret")
+		strings.Contains(subject, "we regret") || 
 }
