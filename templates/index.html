@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Job Tracker</title>
+</head>
+<body>
+  <h1>My Job Applications</h1>
+  <table border="1">
+    <tr>
+      <th>Company</th><th>Title</th><th>Status</th><th>Date</th>
+    </tr>
+    {{range .Jobs}}
+    <tr>
+      <td>{{.Company}}</td><td>{{.Title}}</td><td>{{.Status}}</td><td>{{.Date}}</td>
+    </tr>
+    {{end}}
+  </table>
+</body>
+</html>
