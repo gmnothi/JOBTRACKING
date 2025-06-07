@@ -1,9 +1,12 @@
 package main
 
 import (
+	"crypto/tls"
 	"log"
+	"net"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/emersion/go-imap"
 	"github.com/emersion/go-imap/client"
@@ -16,23 +19,36 @@ func CheckInbox() {
 	email := os.Getenv("GMAIL_USER")
 	password := os.Getenv("GMAIL_PASS")
 
-	c, err := client.DialTLS("imap.gmail.com:993", nil)
+	// Dial with timeout
+	dialer := &net.Dialer{Timeout: 5 * time.Second}
+	conn, err := tls.DialWithDialer(dialer, "tcp", "imap.gmail.com:993", &tls.Config{})
 	if err != nil {
-		log.Println("❌ IMAP dial error:", err)
+		log.Println("❌ IMAP dial timeout/error:", err)
+		return
+	}
+	log.Println("✅ Connected, creating IMAP client...")
+
+	c, err := client.New(conn)
+	if err != nil {
+		log.Println("❌ IMAP client creation failed:", err)
 		return
 	}
 	defer c.Logout()
 
-	if err := c.Login(email, password); err != nil {
+	log.Println("🔑 Attempting login with:", email)
+	err = c.Login(email, password)
+	if err != nil {
 		log.Println("❌ Login failed:", err)
 		return
 	}
+	log.Println("🔑 Login successful!")
 
 	mbox, err := c.Select("INBOX", false)
 	if err != nil {
 		log.Println("❌ Unable to select inbox:", err)
 		return
 	}
+	log.Println("📥 Inbox selected with", mbox.Messages, "messages.")
 
 	if mbox.Messages == 0 {
 		log.Println("📭 No messages found.")
@@ -40,22 +56,29 @@ func CheckInbox() {
 	}
 
 	seqSet := new(imap.SeqSet)
-	seqSet.AddRange(mbox.Messages-10, mbox.Messages) // last 10 messages
+	from := uint32(1)
+	if mbox.Messages > 10 {
+		from = mbox.Messages - 10
+	}
+	seqSet.AddRange(from, mbox.Messages)
 
 	section := &imap.BodySectionName{}
 	messages := make(chan *imap.Message, 10)
-	err = c.Fetch(seqSet, []imap.FetchItem{section.FetchItem()}, messages)
-	if err != nil {
-		log.Println("❌ Fetch failed:", err)
-		return
-	}
+
+	go func() {
+		if err := c.Fetch(seqSet, []imap.FetchItem{section.FetchItem()}, messages); err != nil {
+			log.Println("❌ Fetch failed:", err)
+		}
+	}()
 
 	for msg := range messages {
 		if msg == nil {
+			log.Println("⚠️ Received nil message, skipping")
 			continue
 		}
 		r := msg.GetBody(section)
 		if r == nil {
+			log.Println("⚠️ No body in message, skipping")
 			continue
 		}
 		mr, err := imapmail.CreateReader(r)
@@ -80,6 +103,8 @@ func CheckInbox() {
 			SaveJob(job)
 		}
 	}
+
+	log.Println("✅ Done processing recent messages.")
 }
 
 func isJobRelated(subject string) bool {

@@ -6,6 +6,7 @@ require (
 	github.com/emersion/go-imap v1.2.1
 	github.com/emersion/go-message v0.18.2
 	github.com/gin-gonic/gin v1.10.1
+	github.com/joho/godotenv v1.5.1
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/robfig/cron/v3 v3.0.1
 )
