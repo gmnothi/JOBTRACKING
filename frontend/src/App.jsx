@@ -26,7 +26,7 @@ function App() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Toucan</h1>
+      <h1 className="text-2xl font-bold mb-4"><img src="/logos/toucanlogo.png" className="w-20 h-20 inline-block mr-0" alt="Toucan Logo"></img>Toucan</h1>
       <div className="overflow-x-auto">
         <table className="min-w-full bg-white border border-gray-300">
           <thead>
