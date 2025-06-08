@@ -1,4 +1,8 @@
-# ![Toucan Logo](frontend/public/logos/toucanlogo2.jpg) Toucan Job Tracker
+<p align="center">
+  <img src="frontend/public/logos/toucanlogo2.jpg" alt="Toucan Logo" width="200"/>
+</p>
+
+<h1 align="center">Toucan Job Tracker</h1>
 
 > "As if applying for jobs wasn't already driving me crazy, tracking them was even worse."
 
