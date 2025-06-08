@@ -1,4 +1,4 @@
-# ![Toucan Logo](./logos/toucanlogo2.png) Toucan Job Tracker
+# ![Toucan Logo](frontend/public/logos/toucanlogo2.png) Toucan Job Tracker
 
 > "As if applying for jobs wasn't already driving me crazy, tracking them was even worse."
 
