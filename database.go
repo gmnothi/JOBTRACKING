@@ -51,3 +51,19 @@ func GetAllJobs() []Job {
 	}
 	return jobs
 }
+
+func ClearJobs() {
+	db, err := sql.Open("sqlite3", "./jobs.db")
+	if err != nil {
+		log.Println("❌ Failed to open DB:", err)
+		return
+	}
+	defer db.Close()
+
+	_, err = db.Exec("DELETE FROM jobs")
+	if err != nil {
+		log.Println("❌ Failed to clear jobs table:", err)
+	} else {
+		log.Println("🧹 Cleared old jobs from DB")
+	}
+}

@@ -81,6 +81,8 @@ func CheckInbox() {
 	messages := make(chan *imap.Message, fetchCount)
 	var emailCount = 0
 
+	ClearJobs()
+
 	// Simple goroutine without trying to close the channel ourselves
 	go func() {
 		defer func() {
@@ -156,9 +158,17 @@ func CheckInbox() {
 					messageID = msg.Envelope.MessageId
 				}
 
+				body := ExtractPlainTextBody(mr)
+				company, title, err := ExtractJobDetails(subject, body)
+				if err != nil {
+					log.Println("❌ Failed to extract job details via LLM:", err)
+					company = "Unknown"
+					title = subject
+				}
+
 				job := Job{
-					Company: "Unknown",
-					Title:   subject,
+					Company: company,
+					Title:   title,
 					Status:  "Applied",
 					EmailID: messageID,
 					Date:    dateStr,
@@ -181,8 +191,13 @@ func CheckInbox() {
 }
 
 func isCareerDomain(address string) bool {
+	address = strings.ToLower(address)
+
+	if strings.Contains(address, "@linkedin.com") {
+		return false
+	}
+
 	domains := []string{
-		"linkedin.com",
 		"indeed.com",
 		"workdaymail.com",
 		"jobs.noreply@",
@@ -193,12 +208,13 @@ func isCareerDomain(address string) bool {
 		"greenhouse.io",
 		"careers@",
 	}
-	address = strings.ToLower(address)
+
 	for _, domain := range domains {
 		if strings.Contains(address, domain) {
 			return true
 		}
 	}
+
 	return false
 }
 
@@ -207,5 +223,33 @@ func isJobRelated(subject string) bool {
 	return strings.Contains(subject, "applied") ||
 		strings.Contains(subject, "thank you") ||
 		strings.Contains(subject, "application received") ||
-		strings.Contains(subject, "we regret") || 
+		strings.Contains(subject, "we regret") ||
+		strings.Contains(subject, "journey")
+}
+
+func ExtractPlainTextBody(mr *imapmail.Reader) string {
+	for {
+		p, err := mr.NextPart()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Println("❌ Error reading MIME part:", err)
+			break
+		}
+
+		switch h := p.Header.(type) {
+		case *imapmail.InlineHeader:
+			mediaType, _, _ := h.ContentType()
+			if strings.HasPrefix(mediaType, "text/plain") {
+				bodyBytes, err := io.ReadAll(p.Body)
+				if err != nil {
+					log.Println("❌ Failed to read plain body:", err)
+					return ""
+				}
+				return string(bodyBytes)
+			}
+		}
+	}
+	return ""
 }

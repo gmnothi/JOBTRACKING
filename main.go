@@ -19,6 +19,7 @@ func init() {
 }
 
 func main() {
+	TestOpenAI()
 	InitDB()
 	CheckInbox()
 

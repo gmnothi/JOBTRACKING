@@ -11,6 +11,7 @@ func StartWebServer() {
 	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/", func(c *gin.Context) {
+		CheckInbox()
 		jobs := GetAllJobs()
 		c.HTML(http.StatusOK, "index.html", gin.H{
 			"Jobs": jobs,
