@@ -30,6 +30,16 @@ func StartWebServer() {
 		c.JSON(http.StatusOK, jobs)
 	})
 
+	r.DELETE("/api/jobs/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		err := DeleteJob(id)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "Job deleted successfully"})
+	})
+
 	// Serve React frontend (built with Vite) under /app/*
 	r.Static("/app", "./frontend/dist") // Make sure this path is correct
 

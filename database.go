@@ -67,3 +67,12 @@ func ClearJobs() {
 		log.Println("🧹 Cleared old jobs from DB")
 	}
 }
+
+func DeleteJob(id string) error {
+	query := `DELETE FROM jobs WHERE ID = ?`
+	_, err := db.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

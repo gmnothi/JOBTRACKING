@@ -17,4 +17,13 @@ export const getJobs = async () => {
     console.error('Error fetching jobs:', error);
     throw error;
   }
+};
+
+export const deleteJob = async (jobId) => {
+  try {
+    await api.delete(`/jobs/${jobId}`);
+  } catch (error) {
+    console.error('Error deleting job:', error);
+    throw error;
+  }
 }; 
