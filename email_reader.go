@@ -70,7 +70,7 @@ func CheckInbox() {
 	}
 
 	seqSet := new(imap.SeqSet)
-	const fetchCount = 2000
+	const fetchCount = 500
 	from := uint32(1)
 	if mbox.Messages > fetchCount {
 		from = mbox.Messages - fetchCount + 1
@@ -166,10 +166,12 @@ func CheckInbox() {
 					title = subject
 				}
 
+				status := determineStatus(subject, body)
+
 				job := Job{
 					Company: company,
 					Title:   title,
-					Status:  "Applied",
+					Status:  status,
 					EmailID: messageID,
 					Date:    dateStr,
 				}
@@ -207,6 +209,14 @@ func isCareerDomain(address string) bool {
 		"lever.co",
 		"greenhouse.io",
 		"careers@",
+		"no-reply",
+		"autoreply",
+		"noreply",
+		"reply@",
+		"do-not-reply@",
+		"workday",
+		"icims",
+		"talent",
 	}
 
 	for _, domain := range domains {
@@ -252,4 +262,17 @@ func ExtractPlainTextBody(mr *imapmail.Reader) string {
 		}
 	}
 	return ""
+}
+
+func determineStatus(subject, body string) string {
+	text := strings.ToLower(subject + " " + body)
+	switch {
+	case strings.Contains(text, "interview"):
+		return "Interview"
+	case strings.Contains(text, "offer"):
+		return "Offer"
+	case strings.Contains(text, "rejected"), strings.Contains(text, "regret"):
+		return "Rejected"
+	}
+	return "Applied"
 }
