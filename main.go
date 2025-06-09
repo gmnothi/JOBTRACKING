@@ -11,11 +11,10 @@ import (
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("❌ Error loading .env file")
+		log.Fatal("Error loading .env file")
 	}
-	log.Println("📛 GMAIL_PASS =", os.Getenv("GMAIL_PASS"))
-	// Optional: log what's loaded
-	log.Println("📛 GMAIL_USER =", os.Getenv("GMAIL_USER"))
+
+	log.Println("GMAIL_USER =", os.Getenv("GMAIL_USER"))
 }
 
 func main() {
@@ -24,7 +23,7 @@ func main() {
 	CheckInbox()
 
 	c := cron.New()
-	c.AddFunc("@every 2m", CheckInbox)
+	c.AddFunc("@every 20m", CheckInbox)
 	c.Start()
 
 	StartWebServer()

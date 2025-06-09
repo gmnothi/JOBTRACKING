@@ -4,7 +4,7 @@
   height: 200%;
   background: linear-gradient(45deg, #f472b6, #ec4899, #db2777);
   opacity: 0.3;
-  animation: wave 5s infinite linear;
+  animation: wave 45s infinite linear;
   transform-origin: center center;
 }
 

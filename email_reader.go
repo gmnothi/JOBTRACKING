@@ -26,51 +26,45 @@ func CheckInbox() {
 	// Add defer recover to catch any remaining panics
 	defer func() {
 		if r := recover(); r != nil {
-			log.Printf("❌ Panic recovered in CheckInbox: %v", r)
+			log.Printf("Panic recovered in CheckInbox: %v", r)
 		}
 	}()
 
-	log.Println("📬 Connecting to Gmail IMAP...")
 	email := os.Getenv("GMAIL_USER")
 	password := os.Getenv("GMAIL_PASS")
 
 	dialer := &net.Dialer{Timeout: 5 * time.Second}
 	conn, err := tls.DialWithDialer(dialer, "tcp", "imap.gmail.com:993", &tls.Config{})
 	if err != nil {
-		log.Println("❌ IMAP dial timeout/error:", err)
+		log.Println("IMAP dial timeout/error:", err)
 		return
 	}
 
-	log.Println("✅ Connected, creating IMAP client...")
 	c, err := client.New(conn)
 	if err != nil {
-		log.Println("❌ IMAP client creation failed:", err)
+		log.Println("IMAP client creation failed:", err)
 		return
 	}
 	defer c.Logout()
 
-	log.Println("🔑 Attempting login with:", email)
 	err = c.Login(email, password)
 	if err != nil {
-		log.Println("❌ Login failed:", err)
+		log.Println("Login failed:", err)
 		return
 	}
 
-	log.Println("🔑 Login successful!")
 	mbox, err := c.Select("INBOX", false)
 	if err != nil {
-		log.Println("❌ Unable to select inbox:", err)
+		log.Println("Unable to select inbox:", err)
 		return
 	}
 
-	log.Println("📥 Inbox selected with", mbox.Messages, "messages.")
 	if mbox.Messages == 0 {
-		log.Println("📭 No messages found.")
 		return
 	}
 
 	seqSet := new(imap.SeqSet)
-	const fetchCount = 500
+	const fetchCount = 3000
 	from := uint32(1)
 	if mbox.Messages > fetchCount {
 		from = mbox.Messages - fetchCount + 1
@@ -87,7 +81,7 @@ func CheckInbox() {
 	go func() {
 		defer func() {
 			if r := recover(); r != nil {
-				log.Printf("❌ Panic recovered in fetch goroutine: %v", r)
+				log.Printf("Panic recovered in fetch goroutine: %v", r)
 			}
 		}()
 
@@ -95,7 +89,7 @@ func CheckInbox() {
 			section.FetchItem(),
 			imap.FetchEnvelope,
 		}, messages); err != nil {
-			log.Println("❌ Fetch failed:", err)
+			log.Println("Fetch failed:", err)
 		}
 		// Let the IMAP library handle closing the channel
 	}()
@@ -105,30 +99,27 @@ func CheckInbox() {
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
-					log.Printf("❌ Panic recovered while processing message: %v", r)
+					log.Printf("Panic recovered while processing message: %v", r)
 				}
 			}()
 
 			emailCount += 1
 			if msg == nil {
-				log.Println("⚠️ Received nil message, skipping")
 				return
 			}
 
 			if msg.Envelope == nil {
-				log.Println("⚠️ Skipping message with nil envelope")
 				return
 			}
 
 			r := msg.GetBody(section)
 			if r == nil {
-				log.Println("⚠️ No body in message, skipping")
 				return
 			}
 
 			mr, err := imapmail.CreateReader(r)
 			if err != nil {
-				log.Println("❌ Could not parse message:", err)
+				log.Println("Could not parse message:", err)
 				return
 			}
 
@@ -141,9 +132,6 @@ func CheckInbox() {
 			if len(from) > 0 && from[0] != nil && from[0].Address != "" {
 				fromAddress = from[0].Address
 			}
-
-			log.Println("📩", subject, "| From:", fromAddress)
-			log.Println(emailCount)
 
 			if isJobRelated(subject) && isCareerDomain(fromAddress) {
 				// Safe date handling
@@ -161,7 +149,7 @@ func CheckInbox() {
 				body := ExtractPlainTextBody(mr)
 				company, title, err := ExtractJobDetails(subject, body)
 				if err != nil {
-					log.Println("❌ Failed to extract job details via LLM:", err)
+					log.Println("Failed to extract job details via LLM:", err)
 					company = "Unknown"
 					title = subject
 				}
@@ -180,7 +168,7 @@ func CheckInbox() {
 				func() {
 					defer func() {
 						if r := recover(); r != nil {
-							log.Printf("❌ Panic in SaveJob: %v", r)
+							log.Printf("Panic in SaveJob: %v", r)
 						}
 					}()
 					SaveJob(job)
@@ -188,8 +176,6 @@ func CheckInbox() {
 			}
 		}()
 	}
-
-	log.Println("✅ Done processing recent messages.")
 }
 
 func isCareerDomain(address string) bool {
@@ -244,7 +230,7 @@ func ExtractPlainTextBody(mr *imapmail.Reader) string {
 			break
 		}
 		if err != nil {
-			log.Println("❌ Error reading MIME part:", err)
+			log.Println("Error reading MIME part:", err)
 			break
 		}
 
@@ -254,7 +240,7 @@ func ExtractPlainTextBody(mr *imapmail.Reader) string {
 			if strings.HasPrefix(mediaType, "text/plain") {
 				bodyBytes, err := io.ReadAll(p.Body)
 				if err != nil {
-					log.Println("❌ Failed to read plain body:", err)
+					log.Println("Failed to read plain body:", err)
 					return ""
 				}
 				return string(bodyBytes)
