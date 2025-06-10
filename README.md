@@ -1,8 +1,11 @@
-# ![Toucan Logo](./logos/toucanlogo2.png) Toucan Job Tracker
+<h1><img src="frontend/public/logos/toucanlogo2.jpg" alt="Toucan Logo" style="height: 40px; vertical-align: middle;"> Toucan Job Tracker</h1>
 
-> "As if applying for jobs wasn't already driving me crazy, tracking them was even worse."
 
-![Toucan Job Tracker Screenshot](./screenshots/dashboard.png)
+> As if applying for jobs wasn't already driving me crazy, tracking them was even worse.
+<div>
+<img src="frontend/public/logos/TablePreview.png" alt="Toucan Logo" style="height: 100px; vertical-align: middle;"> 
+<img src="frontend/public/logos/KanbanPreview.png" alt="Toucan Logo" style="height: 100px; vertical-align: middle;">
+</div>
 
 A modern job tracking app to help you organize your job search, built with React (frontend) and Go (backend).
 
