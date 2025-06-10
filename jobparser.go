@@ -79,7 +79,7 @@ Email Body: ` + body
 func TestOpenAI() {
 	apiKey := os.Getenv("OPENAI_API_KEY")
 	if apiKey == "" {
-		fmt.Println("❌ OPENAI_API_KEY not set")
+		fmt.Println("OPENAI_API_KEY not set")
 		return
 	}
 
@@ -98,9 +98,9 @@ func TestOpenAI() {
 	)
 
 	if err != nil {
-		fmt.Printf("❌ OpenAI API error: %v\n", err)
+		fmt.Printf("OpenAI API error: %v\n", err)
 		return
 	}
 
-	fmt.Println("✅ OpenAI response:", resp.Choices[0].Message.Content)
+	fmt.Println("OpenAI response:", resp.Choices[0].Message.Content)
 }
