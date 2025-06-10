@@ -3,8 +3,8 @@
 
 > As if applying for jobs wasn't already driving me crazy, tracking them was even worse.
 
-<h1><img src="frontend/public/logos/TablePreview.png" alt="Toucan Logo" style="height: 40px; vertical-align: middle;"> Toucan Job Tracker</h1>
-<h1><img src="frontend/public/logos/KanbanPreview.png" alt="Toucan Logo" style="height: 40px; vertical-align: middle;"> Toucan Job Tracker</h1>
+<img src="frontend/public/logos/TablePreview.png" alt="Toucan Logo" style="height: 40px; vertical-align: middle;"> 
+<img src="frontend/public/logos/KanbanPreview.png" alt="Toucan Logo" style="height: 40px; vertical-align: middle;">
 
 
 A modern job tracking app to help you organize your job search, built with React (frontend) and Go (backend).
